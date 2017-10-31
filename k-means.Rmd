@@ -61,31 +61,15 @@ truetypes<-function(x) {
   trueclass<<-as.matrix(x)
   trueclass<<-trueclass[,1]
 }
-randomtype<-function(x,k=3) {
-  db<<-as.matrix(x)
-  db<<-db[,-1]
-  randvar<-ceiling(k*runif(nrow(db)))
-  db<<-cbind2(randvar,db)
-  db<<-data.frame(db)
-  return(db)
-}
-centertype<-function(x) {
+centertype<-function(x,n=3) {
   ddb<<-x
   ddb<<-ddb[,-1]
-  randvar<<-runif(nrow(ddb))
-  ddb<<-cbind(randvar,ddb)
-  colnames(ddb)<-c("randvar","Alcohol","Malic","Ash","Alcalinity","Magnesium","Phenols","Flavanoids","Nonflavanoids","Proanthocyanins","Color","Hue","Dilution","Proline")
-  ddb[with(ddb,order(ddb$randvar))]
-  rownames(ddb)<-1:nrow(ddb)
-  class(ddb)<<-"numeric"
-  centroidtype1<<-ddb[(2*nrow(ddb))/4,]
-  centroidtype2<<-ddb[1,]
-  centroidtype3<<-ddb[nrow(ddb),]
-  centroidtype<<-cbind(centroidtype1,centroidtype2,centroidtype3)
+  centroidtype<<-ddb[sample(nrow(ddb),n),]
+  centroidtype<<-t(centroidtype)
   class(centroidtype)<<-"numeric"
   return(centroidtype)
 }
-selectype<-function(x,r1=centertype(randomtype(x))[1],r2=centertype(randomtype(x))[2],r3=centertype(randomtype(x))[3]) {
+selectype<-function(x,r1=centertype(x)[,1],r2=centertype(x)[,2],r3=centertype(x)[,3]) {
   bd<<-as.matrix(x)
   bd<<-bd[,-1]
   bd<<-t(bd)
