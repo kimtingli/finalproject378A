@@ -57,56 +57,75 @@ discdist<-function(x,y) {
 ```
 
 ```{r kmeans}
+truetypes<-function(x) {
+  trueclass<<-as.matrix(x)
+  trueclass<<-trueclass[,1]
+}
+randomtype<-function(x,k=3) {
+  db<<-as.matrix(x)
+  db<<-db[,-1]
+  randvar<-ceiling(k*runif(nrow(db)))
+  db<<-cbind2(randvar,db)
+  db<<-data.frame(db)
+  return(db)
+}
 centertype<-function(x) {
-  centroidtype<<-aggregate(x,by=list(Type=x[,1]),FUN=mean)
-  centroidtype<<-centroidtype[,-1:-2]
-  centroidtype<<-t(centroidtype)
+  ddb<<-x
+  ddb<<-ddb[,-1]
+  randvar<<-runif(nrow(ddb))
+  ddb<<-cbind(randvar,ddb)
+  colnames(ddb)<-c("randvar","Alcohol","Malic","Ash","Alcalinity","Magnesium","Phenols","Flavanoids","Nonflavanoids","Proanthocyanins","Color","Hue","Dilution","Proline")
+  ddb[with(ddb,order(ddb$randvar))]
+  rownames(ddb)<-1:nrow(ddb)
+  class(ddb)<<-"numeric"
+  centroidtype1<<-ddb[(2*nrow(ddb))/4,]
+  centroidtype2<<-ddb[1,]
+  centroidtype3<<-ddb[nrow(ddb),]
+  centroidtype<<-cbind(centroidtype1,centroidtype2,centroidtype3)
+  class(centroidtype)<<-"numeric"
   return(centroidtype)
 }
-selectype<-function(x,r1=centertype(x)[,1],r2=centertype(x)[,2],r3=centertype(x)[,3]) {
-  datos<<-as.matrix(x)
-  truetypes<<-datos[,1]
-  datos<<-datos[,-1]
-  datos<<-t(datos)
-  class(datos)<<-"numeric"
-  class(truetypes)<<-"numeric"
+selectype<-function(x,r1=centertype(randomtype(x))[1],r2=centertype(randomtype(x))[2],r3=centertype(randomtype(x))[3]) {
+  bd<<-as.matrix(x)
+  bd<<-bd[,-1]
+  bd<<-t(bd)
+  class(bd)<<-"numeric"
   types<<-c()
-  for (i in 1:length(truetypes)) {
-    if (min(c(eucdist(datos[,i],r1),eucdist(datos[,i],r2),eucdist(datos[,i],r3)))==eucdist(datos[,i],r1)) {
+  for (i in 1:nrow(x)) {
+    if (min(c(eucdist(bd[,i],r1),eucdist(bd[,i],r2),eucdist(bd[,i],r3)))==eucdist(bd[,i],r1)) {
       types<<-c(types,1)
-    } else if (min(c(eucdist(datos[,i],r1),eucdist(datos[,i],r2),eucdist(datos[,i],r3)))==eucdist(datos[,i],r2)) {
+    } else if (min(c(eucdist(bd[,i],r1),eucdist(bd[,i],r2),eucdist(bd[,i],r3)))==eucdist(bd[,i],r2)) {
       types<<-c(types,2)
     } else {
       types<<-c(types,3)
     }
   }
-  datos<<-t(datos)
-  datos<<-cbind2(truetypes,datos)
   return(types)
 }
-kavg<-function(x,n) {
+kavg<-function(x) {
   tipos<<-cbind2(0,selectype(x))
-  for (i in 2:n) {
-   if (eucdist(tipos[,(i-1)],tipos[,i])>0) {
-      datos<<-as.matrix(x)
-      datos<<-datos[,-1]
-      datos<<-cbind2(tipos[,ncol(tipos)],datos)
-      class(datos)<<-"numeric"
-      currentcenter<<-centertype(datos)
-      tipos<<-cbind2(tipos,selectype(x,currentcenter[,1],currentcenter[,2],currentcenter[,3]))
-    } else {
-      finaltype<<-tipos[,ncol(tipos)]
-      print(ncol(tipos))
-      misclass<<-abs(truetypes-finaltype)
-      for (i in 1:length(truetypes)) {
-        if (misclass[i]>0) {
-          misclass[i]=1
-        }
-      }
-      misclassrate<<-sum(misclass)/length(truetypes)
-      print(misclassrate)
-      return(finaltype)
+  trueclass<<-truetypes(x)
+  class(trueclass)<<-"numeric"
+  i<-2
+  while (eucdist(tipos[,i-1],tipos[,i])>0) {
+    datos<<-as.matrix(x)
+    datos<<-datos[,-1]
+    datos<<-cbind2(tipos[,ncol(tipos)],datos)
+    datos<<-data.frame(datos)
+    currentcenter<<-centertype(datos)
+    tipos<<-cbind2(tipos,selectype(datos,currentcenter[,1],currentcenter[,2],currentcenter[,3]))
+    i<-i+1
+  }
+  finaltype<<-tipos[,ncol(tipos)]
+  print(ncol(tipos))
+  misclass<<-abs(trueclass-finaltype)
+  for (i in 1:length(trueclass)) {
+    if (misclass[i]>0) {
+        misclass[i]=1
     }
   }
+  misclassrate<<-sum(misclass)/length(trueclass)
+  print(misclassrate)
+  return(finaltype)
 }
 ```
