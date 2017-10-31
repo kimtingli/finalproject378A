@@ -1,0 +1,112 @@
+---
+title: "K-means"
+author: "Adrián Díaz"
+date: "28 de octubre de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Setup1}
+install.packages("rattle")
+```
+
+```{r Setup2}
+install.packages("rattle.data")
+install.packages("fpc")
+```
+
+```{r Setup3}
+library(rattle.data)
+data(wine)
+```
+
+```{r Setup4}
+library(fpc)
+```
+
+```{r Setup5}
+winedata<-as.matrix(wine)
+Type<-winedata[,1]
+winedata<-winedata[,-1]
+winedata<-t(winedata)
+class(winedata)<-"numeric"
+class(Type)<-"numeric"
+winemat<-as.matrix(wine)
+View(winedata)
+wineback<-t(winedata)
+wineback<-cbind2(Type,wineback)
+View(wineback)
+```
+
+```{r Distance}
+eucdist<-function(x,y) {
+  x_y2<-(x-y)*(x-y)
+  eucdist<-sqrt(sum(x_y2))
+  return(eucdist)
+}
+discdist<-function(x,y) {
+  if (x==y) {
+    disctdist=0
+  } else {
+    discdist=1
+  }
+}
+```
+
+```{r kmeans}
+centertype<-function(x) {
+  centroidtype<<-aggregate(x,by=list(Type=x[,1]),FUN=mean)
+  centroidtype<<-centroidtype[,-1:-2]
+  centroidtype<<-t(centroidtype)
+  return(centroidtype)
+}
+selectype<-function(x,r1=centertype(x)[,1],r2=centertype(x)[,2],r3=centertype(x)[,3]) {
+  datos<<-as.matrix(x)
+  truetypes<<-datos[,1]
+  datos<<-datos[,-1]
+  datos<<-t(datos)
+  class(datos)<<-"numeric"
+  class(truetypes)<<-"numeric"
+  types<<-c()
+  for (i in 1:length(truetypes)) {
+    if (min(c(eucdist(datos[,i],r1),eucdist(datos[,i],r2),eucdist(datos[,i],r3)))==eucdist(datos[,i],r1)) {
+      types<<-c(types,1)
+    } else if (min(c(eucdist(datos[,i],r1),eucdist(datos[,i],r2),eucdist(datos[,i],r3)))==eucdist(datos[,i],r2)) {
+      types<<-c(types,2)
+    } else {
+      types<<-c(types,3)
+    }
+  }
+  datos<<-t(datos)
+  datos<<-cbind2(truetypes,datos)
+  return(types)
+}
+kavg<-function(x,n) {
+  tipos<<-cbind2(0,selectype(x))
+  for (i in 2:n) {
+   if (eucdist(tipos[,(i-1)],tipos[,i])>0) {
+      datos<<-as.matrix(x)
+      datos<<-datos[,-1]
+      datos<<-cbind2(tipos[,ncol(tipos)],datos)
+      class(datos)<<-"numeric"
+      currentcenter<<-centertype(datos)
+      tipos<<-cbind2(tipos,selectype(x,currentcenter[,1],currentcenter[,2],currentcenter[,3]))
+    } else {
+      finaltype<<-tipos[,ncol(tipos)]
+      print(ncol(tipos))
+      misclass<<-abs(truetypes-finaltype)
+      for (i in 1:length(truetypes)) {
+        if (misclass[i]>0) {
+          misclass[i]=1
+        }
+      }
+      misclassrate<<-sum(misclass)/length(truetypes)
+      print(misclassrate)
+      return(finaltype)
+    }
+  }
+}
+```
