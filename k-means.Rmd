@@ -21,6 +21,7 @@ install.packages("fpc")
 ```{r Setup3}
 library(rattle.data)
 data(wine)
+data(iris)
 ```
 
 ```{r Setup4}
@@ -28,17 +29,14 @@ library(fpc)
 ```
 
 ```{r Setup5}
-winedata<-as.matrix(wine)
-Type<-winedata[,1]
-winedata<-winedata[,-1]
-winedata<-t(winedata)
-class(winedata)<-"numeric"
-class(Type)<-"numeric"
-winemat<-as.matrix(wine)
-View(winedata)
-wineback<-t(winedata)
-wineback<-cbind2(Type,wineback)
-View(wineback)
+newwine<-as.matrix(wine)
+class(newwine)<-"numeric"
+newwine<-data.frame(newwine)
+newwine<-scale(newwine)
+newiris<-as.matrix(iris)
+species<-newiris[,ncol(newiris)]
+newiris<-newiris[,-ncol(newiris)]
+newiris<-cbind(species,newiris)
 ```
 
 ```{r Distance}
@@ -61,15 +59,25 @@ truetypes<-function(x) {
   trueclass<<-as.matrix(x)
   trueclass<<-trueclass[,1]
 }
-centertype<-function(x,n=3) {
+randomcentertype<-function(x,n=3) {
   ddb<<-x
   ddb<<-ddb[,-1]
-  centroidtype<<-ddb[sample(nrow(ddb),n),]
+  randomcentroidtype<<-ddb[sample(nrow(ddb),n),]
+  randomcentroidtype<<-t(randomcentroidtype)
+  class(randomcentroidtype)<<-"numeric"
+  return(randomcentroidtype)
+}
+centertype<-function(x,currtypes) {
+  dd<<-x
+  dd<<-dd[,-1]
+  dd<<-cbind(currtypes,dd)
+  centroidtype<<-aggregate(dd,(by=list(Type=dd[,1])),FUN = function(x) mean(as.numeric(as.character(x))))
+  centroidtype<<-centroidtype[,-1:-2]
   centroidtype<<-t(centroidtype)
   class(centroidtype)<<-"numeric"
   return(centroidtype)
 }
-selectype<-function(x,r1=centertype(x)[,1],r2=centertype(x)[,2],r3=centertype(x)[,3]) {
+selectype<-function(x,r1=randomcentertype(x)[,1],r2=randomcentertype(x)[,2],r3=randomcentertype(x)[,3]) {
   bd<<-as.matrix(x)
   bd<<-bd[,-1]
   bd<<-t(bd)
@@ -96,20 +104,19 @@ kavg<-function(x) {
     datos<<-datos[,-1]
     datos<<-cbind2(tipos[,ncol(tipos)],datos)
     datos<<-data.frame(datos)
-    currentcenter<<-centertype(datos)
+    currentcenter<<-centertype(datos,tipos[,ncol(tipos)])
     tipos<<-cbind2(tipos,selectype(datos,currentcenter[,1],currentcenter[,2],currentcenter[,3]))
     i<-i+1
   }
   finaltype<<-tipos[,ncol(tipos)]
-  print(ncol(tipos))
-  misclass<<-abs(trueclass-finaltype)
-  for (i in 1:length(trueclass)) {
-    if (misclass[i]>0) {
-        misclass[i]=1
-    }
-  }
-  misclassrate<<-sum(misclass)/length(trueclass)
-  print(misclassrate)
+  class(finaltype)<<-"numeric"
+  print(paste("Convergence achieved in ",ncol(tipos)," iterations"))
   return(finaltype)
 }
+```
+
+```{r plots}
+plotcluster(wine[,-1],kavg(wine))
+plotcluster(newwine[,-1],kavg(wine))
+plotcluster(newiris[,-1],kavg(newiris))
 ```
