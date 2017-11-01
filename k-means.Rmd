@@ -35,8 +35,19 @@ newwine<-data.frame(newwine)
 newwine<-scale(newwine)
 newiris<-as.matrix(iris)
 species<-newiris[,ncol(newiris)]
+for (i in 1:length(species)) {
+  if (species[i]=="setosa") {
+    species[i]<-1
+  } else if (species[i]=="versicolor") {
+    species[i]<-2
+  } else {
+    species[i]<-3
+  }
+}
+class(species)<-"numeric"
 newiris<-newiris[,-ncol(newiris)]
 newiris<-cbind(species,newiris)
+class(newiris)<-"numeric"
 ```
 
 ```{r Distance}
@@ -94,7 +105,25 @@ selectype<-function(x,r1=randomcentertype(x)[,1],r2=randomcentertype(x)[,2],r3=r
   }
   return(types)
 }
-kavg<-function(x) {
+kavg<-function(x,n=25,m=3) {
+  bdd<<-as.matrix(x)
+  bdd<<-bdd[,-1]
+  bdd<<-t(bdd)
+  class(bdd)<<-"numeric"
+  initializer1<<-c()
+  INIT<<-c()
+  for (k in 1:n) {
+    for (j in 1:nrow(x)) {
+      initializer1[j]<<-min(c(eucdist(bdd[,j],randomcentertype(x,m)[,1]),eucdist(bdd[,j],randomcentertype(x,m)[,2]),eucdist(bdd[,j],randomcentertype(x,m)[,3])))
+    }
+    INIT<<-cbind2(INIT,initializer1)
+  }
+  initializer1<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
+  initializer2<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
+  initializer3<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
   tipos<<-cbind2(0,selectype(x))
   trueclass<<-truetypes(x)
   class(trueclass)<<-"numeric"
@@ -110,7 +139,9 @@ kavg<-function(x) {
   }
   finaltype<<-tipos[,ncol(tipos)]
   class(finaltype)<<-"numeric"
-  print(paste("Convergence achieved in ",ncol(tipos)," iterations"))
+  print(paste("Convergence achieved in ",ncol(tipos)-1," iterations"))
+  error<<-table(as.numeric(x[,1]),finaltype)
+  print(error)
   return(finaltype)
 }
 ```
@@ -119,4 +150,5 @@ kavg<-function(x) {
 plotcluster(wine[,-1],kavg(wine))
 plotcluster(newwine[,-1],kavg(wine))
 plotcluster(newiris[,-1],kavg(newiris))
+plotcluster(scale(newiris[,-1]),kavg(scale(newiris)))
 ```
