@@ -1,0 +1,154 @@
+---
+title: "K-means"
+author: "Adrián Díaz"
+date: "28 de octubre de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Setup1}
+install.packages("rattle")
+```
+
+```{r Setup2}
+install.packages("rattle.data")
+install.packages("fpc")
+```
+
+```{r Setup3}
+library(rattle.data)
+data(wine)
+data(iris)
+```
+
+```{r Setup4}
+library(fpc)
+```
+
+```{r Setup5}
+newwine<-as.matrix(wine)
+class(newwine)<-"numeric"
+newwine<-data.frame(newwine)
+newwine<-scale(newwine)
+newiris<-as.matrix(iris)
+species<-newiris[,ncol(newiris)]
+for (i in 1:length(species)) {
+  if (species[i]=="setosa") {
+    species[i]<-1
+  } else if (species[i]=="versicolor") {
+    species[i]<-2
+  } else {
+    species[i]<-3
+  }
+}
+class(species)<-"numeric"
+newiris<-newiris[,-ncol(newiris)]
+newiris<-cbind(species,newiris)
+class(newiris)<-"numeric"
+```
+
+```{r Distance}
+eucdist<-function(x,y) {
+  x_y2<-(x-y)*(x-y)
+  eucdist<-sqrt(sum(x_y2))
+  return(eucdist)
+}
+discdist<-function(x,y) {
+  if (x==y) {
+    disctdist=0
+  } else {
+    discdist=1
+  }
+}
+```
+
+```{r kmeans}
+truetypes<-function(x) {
+  trueclass<<-as.matrix(x)
+  trueclass<<-trueclass[,1]
+}
+randomcentertype<-function(x,n=3) {
+  ddb<<-x
+  ddb<<-ddb[,-1]
+  randomcentroidtype<<-ddb[sample(nrow(ddb),n),]
+  randomcentroidtype<<-t(randomcentroidtype)
+  class(randomcentroidtype)<<-"numeric"
+  return(randomcentroidtype)
+}
+centertype<-function(x,currtypes) {
+  dd<<-x
+  dd<<-dd[,-1]
+  dd<<-cbind(currtypes,dd)
+  centroidtype<<-aggregate(dd,(by=list(Type=dd[,1])),FUN = function(x) mean(as.numeric(as.character(x))))
+  centroidtype<<-centroidtype[,-1:-2]
+  centroidtype<<-t(centroidtype)
+  class(centroidtype)<<-"numeric"
+  return(centroidtype)
+}
+selectype<-function(x,r1=randomcentertype(x)[,1],r2=randomcentertype(x)[,2],r3=randomcentertype(x)[,3]) {
+  bd<<-as.matrix(x)
+  bd<<-bd[,-1]
+  bd<<-t(bd)
+  class(bd)<<-"numeric"
+  types<<-c()
+  for (i in 1:nrow(x)) {
+    if (min(c(eucdist(bd[,i],r1),eucdist(bd[,i],r2),eucdist(bd[,i],r3)))==eucdist(bd[,i],r1)) {
+      types<<-c(types,1)
+    } else if (min(c(eucdist(bd[,i],r1),eucdist(bd[,i],r2),eucdist(bd[,i],r3)))==eucdist(bd[,i],r2)) {
+      types<<-c(types,2)
+    } else {
+      types<<-c(types,3)
+    }
+  }
+  return(types)
+}
+kavg<-function(x,n=25,m=3) {
+  bdd<<-as.matrix(x)
+  bdd<<-bdd[,-1]
+  bdd<<-t(bdd)
+  class(bdd)<<-"numeric"
+  initializer1<<-c()
+  INIT<<-c()
+  for (k in 1:n) {
+    for (j in 1:nrow(x)) {
+      initializer1[j]<<-min(c(eucdist(bdd[,j],randomcentertype(x,m)[,1]),eucdist(bdd[,j],randomcentertype(x,m)[,2]),eucdist(bdd[,j],randomcentertype(x,m)[,3])))
+    }
+    INIT<<-cbind2(INIT,initializer1)
+  }
+  initializer1<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
+  initializer2<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
+  initializer3<<-INIT[,which.min(colSums(INIT))]
+  INIT<<-INIT[,-which.min(colSums(INIT))]
+  tipos<<-cbind2(0,selectype(x))
+  trueclass<<-truetypes(x)
+  class(trueclass)<<-"numeric"
+  i<-2
+  while (eucdist(tipos[,i-1],tipos[,i])>0) {
+    datos<<-as.matrix(x)
+    datos<<-datos[,-1]
+    datos<<-cbind2(tipos[,ncol(tipos)],datos)
+    datos<<-data.frame(datos)
+    currentcenter<<-centertype(datos,tipos[,ncol(tipos)])
+    tipos<<-cbind2(tipos,selectype(datos,currentcenter[,1],currentcenter[,2],currentcenter[,3]))
+    i<-i+1
+  }
+  finaltype<<-tipos[,ncol(tipos)]
+  class(finaltype)<<-"numeric"
+  print(paste("Convergence achieved in ",ncol(tipos)-1," iterations"))
+  error<<-table(as.numeric(x[,1]),finaltype)
+  print(error)
+  return(finaltype)
+}
+```
+
+```{r plots}
+plotcluster(wine[,-1],kavg(wine))
+plotcluster(newwine[,-1],kavg(wine))
+plotcluster(newiris[,-1],kavg(newiris))
+plotcluster(scale(newiris[,-1]),kavg(scale(newiris)))
+```
