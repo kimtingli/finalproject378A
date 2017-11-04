@@ -1,7 +1,7 @@
 ---
 title: "Metropolis-Hastings part"
-date: "10/30/2017"
-author: "Fangzhou Yang, Kim Ting Li, adrian"
+date: "11/3/2017"
+author: "Fangzhou Yang, Kim Ting Li, Adrian Diaz"
 output: pdf_document
 ---
 
