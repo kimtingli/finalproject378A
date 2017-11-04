@@ -47,6 +47,7 @@ beta_metropolis <- function(c,startvalue,iterations){
   for (i in 1:iterations){
     phi <- proposalfunction(c, startvalue)
     proposal <- dbeta(startvalue, c*phi, c*(1-phi))/dbeta(phi, c*startvalue, c*(1-startvalue))
+    #post <- posterior(c,startvalue,trueA,trueB)
     post <- dbeta(phi,trueA,trueB)/dbeta(startvalue,trueA,trueB)
     probab <- min(1,post*proposal)
     
@@ -83,6 +84,9 @@ lines(x,dbeta(x,6,4),col = "red")
 ```{r}
 ks.test(jitter(draws,0.0001),rbeta(10000,6,4))
 ```
+From the Kolmogorov¨CSmirnov statistic test, we can see the p-value equals 0.0009305,which is much smaller than p = 0.01, then we reject the null hypothesis, the data does not follow the beta distribution.
+
+#Re-run
 
 c = 0.1:
 ```{r}
@@ -94,10 +98,14 @@ hist(draws2, main = "Historgram of c = 0.1",freq = FALSE)
 x <- seq(0,1,0.01)
 lines(x,dbeta(x,6,4),col = "red")
 ```
+From the acf plot, we could see there are lots of lags, so it should be tested for 50,000 draws before thining and burn-in. After we thin abouth 50 times, test for 10,000 draws, the p-value is much better but still small, so it does not work.
+
 
 ```{r}
 ks.test(jitter(draws2,0.0001),rbeta(10000,6,4))
 ```
+From the Kolmogorov¨CSmirnov statistic test, we can see the p-value equals 6.142e-11,which is much smaller than p = 0.01, then we reject the null hypothesis, the data does not follow the beta distribution.
+
 
 c = 2.5:
 ```{r}
@@ -109,10 +117,13 @@ hist(draws3, main = "Historgram of c = 2.5",freq = FALSE)
 x <- seq(0,1,0.01)
 lines(x,dbeta(x,6,4),col = "red")
 ```
+Test for 50,000 draws before thining and burn-in. After we thin 5 times,test for 10,000 draws, the p-value of k-s test is much better.
+
 
 ```{r}
 ks.test(jitter(draws3,0.0001),rbeta(10000,6,4))
 ```
+
 
 c = 10:
 ```{r}
@@ -124,11 +135,16 @@ hist(draws4, main = "Historgram of c = 10",freq = FALSE)
 x <- seq(0,1,0.01)
 lines(x,dbeta(x,6,4),col = "red")
 ```
+Test for 50,000 draws before thining and burn-in. After we thin 5 times,test for 10,000 draws, the p-value of k-s test is much better.
+
 
 ```{r}
 ks.test(jitter(draws4,0.0001),rbeta(10000,6,4))
 ```
+From the Kolmogorov¨CSmirnov statistic test, we can see the p-value equals 0.08414,which is larger than p = 0.05, then we cannot reject the null hypothesis, the data follows the beta distribution.
 
+
+##Conclusion:
 By re-run the sampler with c = 0.1, c = 2.5 and c = 1, we can see when c is getting larger, it meets the target distribution better and have larger p-value, but when c is too large, the autocorrelation would be worse. 
 
 1. Compare their plot, as c becomes larger, the more efficient it meets target distribution.
